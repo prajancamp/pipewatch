@@ -39,3 +39,8 @@ def notify_file(alerts: List[Alert], path: str) -> None:
     with open(path, "a") as f:
         for a in alerts:
             f.write(json.dumps({"pipeline": a.pipeline, "level": a.level, "message": a.message}) + "\n")
+
+
+def _alert_to_dict(alert: Alert) -> dict:
+    """Convert an Alert to a plain dictionary."""
+    return {"pipeline": alert.pipeline, "level": alert.level, "message": alert.message}
