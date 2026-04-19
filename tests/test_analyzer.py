@@ -49,6 +49,16 @@ def test_compute_stats_empty():
     assert compute_stats([]) == {}
 
 
+def test_compute_stats_all_failures():
+    runs = [
+        make_run("batch", PipelineStatus.FAILED),
+        make_run("batch", PipelineStatus.FAILED),
+    ]
+    stats = compute_stats(runs)
+    assert stats["batch"].failure_rate == 1.0
+    assert stats["batch"].success_runs == 0
+
+
 def test_find_consecutive_failures_detected():
     runs = [
         make_run("nightly", PipelineStatus.SUCCESS),
