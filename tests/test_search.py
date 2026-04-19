@@ -36,6 +36,14 @@ def test_search_by_error_no_match():
     assert result == []
 
 
+def test_search_by_error_none_errors_skipped():
+    """Runs with no error message should not raise and should be excluded."""
+    runs = [make_run(error=None), make_run(error=None), make_run(error="timeout")]
+    result = search_by_error(runs, "timeout")
+    assert len(result) == 1
+    assert result[0].error == "timeout"
+
+
 def test_search_by_pipeline_partial():
     runs = [make_run(name="etl_sales"), make_run(name="etl_inventory"), make_run(name="reporting")]
     result = search_by_pipeline(runs, "etl")
