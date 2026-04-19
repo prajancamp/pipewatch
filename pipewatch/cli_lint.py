@@ -6,9 +6,16 @@ from pipewatch.lint import lint_runs
 
 def cmd_lint(args: argparse.Namespace) -> None:
     store = RunStore(args.store)
-    runs = store.load_all()
+    try:
+        runs = store.load_all()
+    except FileNotFoundError:
+        print(f"Error: Store directory not found: {args.store}")
+        raise SystemExit(2)
     if args.pipeline:
         runs = [r for r in runs if args.pipeline.lower() in r.pipeline_name.lower()]
+        if not runs:
+            print(f"No runs found matching pipeline filter: {args.pipeline!r}")
+            raise SystemExit(2)
     report = lint_runs(runs)
     print(str(report))
     if report.has_issues:
