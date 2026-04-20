@@ -48,3 +48,16 @@ def latest_run_per_pipeline(runs: List[PipelineRun]) -> List[PipelineRun]:
         if existing is None or run.started_at > existing.started_at:
             latest[run.pipeline_name] = run
     return sorted(latest.values(), key=lambda r: r.pipeline_name)
+
+
+def runs_by_status(runs: List[PipelineRun]) -> dict[PipelineStatus, List[PipelineRun]]:
+    """Group runs by their status.
+
+    Returns a dictionary mapping each status present in *runs* to the list of
+    runs that carry that status, preserving the original ordering within each
+    group.
+    """
+    grouped: dict[PipelineStatus, List[PipelineRun]] = {}
+    for run in runs:
+        grouped.setdefault(run.status, []).append(run)
+    return grouped
