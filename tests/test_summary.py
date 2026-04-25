@@ -42,6 +42,13 @@ def test_stats_to_dict_none_duration():
     assert d["avg_duration"] is None
 
 
+def test_stats_to_dict_failure_status():
+    """Ensure last_status is serialized correctly for non-success statuses."""
+    s = make_stats(last_status=PipelineStatus.FAILURE)
+    d = stats_to_dict(s)
+    assert d["last_status"] == "failure"
+
+
 def test_export_json_valid():
     stats_list = [make_stats("pipe_a"), make_stats("pipe_b", total=5, success=3, failure=2)]
     result = export_json(stats_list)
@@ -49,6 +56,12 @@ def test_export_json_valid():
     assert len(parsed) == 2
     assert parsed[0]["pipeline"] == "pipe_a"
     assert parsed[1]["pipeline"] == "pipe_b"
+
+
+def test_export_json_empty():
+    """Exporting an empty list should produce a valid empty JSON array."""
+    result = export_json([])
+    assert json.loads(result) == []
 
 
 def test_export_csv_valid():
@@ -59,6 +72,15 @@ def test_export_csv_valid():
     assert len(rows) == 1
     assert rows[0]["pipeline"] == "pipe_x"
     assert rows[0]["success_count"] == "8"
+
+
+def test_export_csv_headers():
+    """CSV output should include all expected column headers."""
+    result = export_csv([make_stats()])
+    reader = csv.DictReader(io.StringIO(result))
+    expected_fields = {"pipeline", "total_runs", "success_count", "failure_count",
+                       "success_rate", "avg_duration", "last_status"}
+    assert expected_fields.issubset(set(reader.fieldnames))
 
 
 def test_export_summary_json():
