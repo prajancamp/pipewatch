@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -47,7 +47,10 @@ def load_checkpoints(store_path: str) -> Dict[str, CheckpointEntry]:
     path = _checkpoint_path(store_path)
     if not path.exists():
         return {}
-    data = json.loads(path.read_text())
+    try:
+        data = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError) as exc:
+        raise ValueError(f"Failed to load checkpoints from {path}: {exc}") from exc
     return {k: CheckpointEntry.from_dict(v) for k, v in data.items()}
 
 
@@ -80,5 +83,13 @@ def get_checkpoint(store_path: str, pipeline: str) -> Optional[CheckpointEntry]:
 
 
 def seconds_since_checkpoint(entry: CheckpointEntry) -> float:
+    """Return the number of seconds elapsed since the checkpoint's last success.
+
+    Uses timezone-aware UTC time to avoid issues with system clock offsets.
+    """
     last = datetime.fromisoformat(entry.last_success)
-    return (datetime.utcnow() - last).total_seconds()
+    # If the stored timestamp has no tzinfo, treat it as UTC.
+    if last.tzinfo is None:
+        last = last.replace(tzinfo=timezone.utc)
+    now = datetime.now(tz=timezone.utc)
+    return (now - last).total_seconds()
