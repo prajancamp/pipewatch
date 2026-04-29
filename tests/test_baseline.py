@@ -55,6 +55,14 @@ def test_diff_baseline_detects_regression():
     assert d.duration_delta == pytest.approx(5.0)
 
 
+def test_diff_baseline_no_change():
+    """Pipelines with identical metrics should produce no diffs."""
+    current = [make_entry("etl", avg_duration=10.0, success_rate=0.9)]
+    baseline = [make_entry("etl", avg_duration=10.0, success_rate=0.9)]
+    diffs = diff_baseline(current, baseline)
+    assert diffs == []
+
+
 def test_diff_baseline_skips_new_pipelines():
     current = [make_entry("new_pipeline")]
     baseline = [make_entry("etl")]
