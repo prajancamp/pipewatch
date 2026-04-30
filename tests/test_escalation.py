@@ -94,3 +94,18 @@ def test_escalation_result_str_contains_pipeline():
     assert "my_pipe" in text
     assert "LOW" in text
     assert "Monitor closely." in text
+
+
+def test_escalate_alerts_result_alert_count_matches():
+    """Ensure alert_count on each result equals the number of alerts for that pipeline."""
+    alerts = [
+        make_alert("pipe_x", rule=f"rule_{i}") for i in range(4)
+    ] + [
+        make_alert("pipe_y", rule=f"rule_{i}") for i in range(2)
+    ]
+    results = escalate_alerts(alerts)
+    by_name = {r.pipeline: r for r in results}
+    assert by_name["pipe_x"].alert_count == 4
+    assert by_name["pipe_y"].alert_count == 2
+    assert len(by_name["pipe_x"].alerts) == 4
+    assert len(by_name["pipe_y"].alerts) == 2
